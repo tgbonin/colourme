@@ -17,6 +17,12 @@
         var ctx;
         
         var colourBoxArray;
+        var boxSize = (500/7);
+        
+        var gamePlaying = false;
+        
+        var numPlayers;
+        var numPlayersReady;
         
         function init() {
             
@@ -38,6 +44,18 @@
             
             setInterval(Update, 17);
             
+            SocketSetUp();
+            
+            document.getElementById("colourPreview").style.backgroundColor = userColour;
+        
+            document.getElementById("readyUpBtn").onclick = (function(){
+                socket.emit('readyUp'); 
+                document.getElementById("readyUpBtn").disabled = true;
+            });
+        }
+        
+        
+        function SocketSetUp(){
             socket = io.connect();
             
             socket.on('connect', function() {
@@ -45,17 +63,44 @@
             });
             
             socket.on('updateGameBoxes', function(data){
-                console.log("test");
                 colourBoxArray = data;
             });
             
             socket.on('networkBoxClicked', networkUpdate);
             
             socket.on('setColour', function(data){
-                console.log("changing Colour");
                 userColour = data; 
+                document.getElementById("colourPreview").style.backgroundColor = userColour;
+            });
+            
+            socket.on('setGameState', function(data){
+                gamePlaying = data; 
+
+                var rdyDiv = document.getElementById("readyDiv");
+                if(gamePlaying) {rdyDiv.style.visibility = "hidden";}
+                else {
+                    rdyDiv.style.visibility = "visible";
+                    document.getElementById("readyUpBtn").disabled = false;
+                }
+                
+            });
+            
+            socket.on('updateNumPlayers', function(data){
+                numPlayers = data.serverPlayers;
+                numPlayersReady = data.serverPlayersReady;
+                
+                console.log("updating number of players");
+                
+                document.getElementById("numPlayers").innerHTML = numPlayers;
+                document.getElementById("numPlayersReady").innerHTML = numPlayersReady;
+            });
+            
+            socket.on('updateTime', function(data){
+                timeLeft = data;
+                document.getElementById("timeLeft").innerHTML = timeLeft;
             });
         }
+        
         
         function Update(){
             DrawBoxes();
@@ -75,28 +120,29 @@
                     ctx.strokeStyle = "#aaa";
                     ctx.lineWidth = 5;
                     
-                    ctx.fillRect((100*x), (100*y), 100, 100);
-                    ctx.strokeRect((100*x), (100*y), 100, 100);
+                    ctx.fillRect((boxSize*x), (boxSize*y), boxSize, boxSize);
+                    ctx.strokeRect((boxSize*x), (boxSize*y), boxSize, boxSize);
                     
                 }
             }
             
         }
         
-        function HandleBoxClick(e){
+        function HandleBoxClick(e){ 
+            if(gamePlaying){
+                var mousePos = GetMousePos(e);
             
-            var mousePos = GetMousePos(e);
+                var xPos = Math.floor(mousePos.x/boxSize);
+                var yPos = Math.floor(mousePos.y/boxSize);
             
-            var xPos = Math.floor(mousePos.x/100);
-            var yPos = Math.floor(mousePos.y/100);
+                colourBoxArray[xPos][yPos] = userColour;
             
-            colourBoxArray[xPos][yPos] = userColour;
-            
-            socket.emit("clientBoxClick", {
-                colour: userColour,
-                x: xPos,
-                y: yPos
-            });
+                socket.emit("clientBoxClick", {
+                    colour: userColour,
+                    x: xPos,
+                    y: yPos
+                });
+            }
         }
         
         function GetMousePos(e){
@@ -109,12 +155,57 @@
         
         
         window.onload = init;
-    
-    
     </script>
+    
+    <style>
+        body{
+            text-align: center;
+        }
+        
+        #colourPreview{
+            width: 25px;
+            height: 25px;
+            margin: 0 auto;
+            margin-top: -20px;
+            margin-bottom: 10px;
+            border: 2px solid black;
+        }
+        
+        #gameCanvas{
+            border: 3px solid #aaa;
+        }
+    </style>
     
 </head>
 <body>
-    <canvas id="gameCanvas" width="700" height="700" style="background-color: #333;"></canvas>
+    <h1>Colour Me!</h1>
+    <h2>Your Color:</h2>
+    <div id="colourPreview"></div>
+    <h2>Time left in round: <span id="timeLeft">0</span></h2>
+    <canvas id="gameCanvas" width="500" height="500" style="background-color: #333;"></canvas>
+    <div id="playerInfo">
+        <p>Number of current players: <span id="numPlayers"></span></p>
+        <div id="readyDiv">
+            <p>Players Ready: <span id="numPlayersReady"></span></p>
+            <button id="readyUpBtn">Ready Up</button>
+        </div>
+    </div> 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
