@@ -1,0 +1,13 @@
+{
+  "name": "colourit",
+  "version": "1.0.0",
+  "description": "A game where you need to colour the most canvas ",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "pretest": "jshint ./src",
+    "test": "echo \"Tests complete\""
+  },
+  "author": "Tim Bonin",
+  "license": "ISC"
+}
