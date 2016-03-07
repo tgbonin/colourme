@@ -56,7 +56,10 @@ io.on('connection', function(socket) {
             colour: data.colour,
                 x: data.x,
                 y: data.y
-            });
+        });
+        
+        GetGameLeader();
+        
 	});
 	
 	socket.on('disconnect', function(data) {
@@ -136,8 +139,49 @@ function ResetGameBoxes(){
             serverColourBoxes[x][y] = "white";
         }
     }
-    
+    GetGameLeader();
     io.sockets.in('room1').emit('updateGameBoxes', serverColourBoxes);
 }
 
+function GetGameLeader(){
+    
+    var numEachColour = new Array[8];
+    for(var n = 0; n < 8; n++) numEachColour[n] = 0;
+    
+    for(var x = 0; x < 7; x++){
+        for(var y = 0; y < 7; y++){
+            var boxColour = serverColourBoxes[x][y];
+            
+            for(var c = 0; c < 8; c++){
+                if(boxColour == colours[c]){
+                    numEachColour[c]++;
+                }
+            }
+            
+        }
+    }
+    
+    var leader = "None";
+    var leaderNum = 0;
+    
+    for(var m = 0; m < 8; m++){
+        if(numEachColour[m] > leaderNum){
+            leader = colours[m];
+            leaderNum = numEachColour[m];
+        }
+    }
+    
+    io.sockets.in('room1').emit('updateLeader', leader);
+}
+
 console.log("Server running and listening on port 3000");
+
+
+
+
+
+
+
+
+
+

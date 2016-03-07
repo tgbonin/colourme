@@ -77,9 +77,14 @@
                 gamePlaying = data; 
 
                 var rdyDiv = document.getElementById("readyDiv");
-                if(gamePlaying) {rdyDiv.style.visibility = "hidden";}
+                var leaderDiv = document.getElementById("leaderDiv");
+                if(gamePlaying) {
+                    rdyDiv.style.visibility = "hidden";
+                    leaderDiv.style.visibility = "visible";
+                }
                 else {
                     rdyDiv.style.visibility = "visible";
+                    leaderDiv.style.visibility = "hidden";
                     document.getElementById("readyUpBtn").disabled = false;
                 }
                 
@@ -98,6 +103,10 @@
             socket.on('updateTime', function(data){
                 timeLeft = data;
                 document.getElementById("timeLeft").innerHTML = timeLeft;
+            });
+            
+            socket.on('updateLeader', function(data){
+                document.getElementById("colourLeader").innerHTML = data;
             });
         }
         
@@ -188,6 +197,9 @@
         <div id="readyDiv">
             <p>Players Ready: <span id="numPlayersReady"></span></p>
             <button id="readyUpBtn">Ready Up</button>
+        </div>
+        <div id="leaderDiv">
+            <h2>Current Leader: <span id="colourLeader"></span></h2>
         </div>
     </div> 
 </body>
