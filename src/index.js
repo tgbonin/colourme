@@ -94,7 +94,7 @@ io.on('connection', function(socket) {
 function getPlayerColour(socket){    
     
     for(var i = 0; i < 8; i++){
-        if(players[i] == undefined){
+        if(players[i] === undefined){
             players[i] = socket;
             socket.emit('setColour', colours[i]);
             break;
@@ -110,7 +110,7 @@ function TimeUpdate(){
         
         io.sockets.in('room1').emit('updateTime', roundTimeLeft);
         
-        if(roundTimeLeft == 0){
+        if(roundTimeLeft === 0){
             io.sockets.in('room1').emit('setGameState', false);
             gamePlaying = false;
         }
@@ -145,7 +145,7 @@ function ResetGameBoxes(){
 
 function GetGameLeader(){
     
-    var numEachColour = new Array[8];
+    var numEachColour = new Array(8);
     for(var n = 0; n < 8; n++) numEachColour[n] = 0;
     
     for(var x = 0; x < 7; x++){
