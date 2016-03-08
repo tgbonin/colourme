@@ -5,15 +5,16 @@ var fs = require('fs');
 var PORT = process.env.PORT || process.env.NODE_PORT || 3000;
 app.listen(PORT);
 
-var colours = ["red", "blue", "green", "purple", "black", "yellow", "cyan", "brown"];
-var players = [];
+var colours = ["red", "blue", "green", "purple", "black", "yellow", "cyan", "brown"];   //colours available for player use
+var players = [];           //array of players in the server
 
-var roundTimeLeft = 30;
-var numPlayersReady = 0;
-var numPlayers = 0;
+var roundTimeLeft = 30;     //amount of time left in the current round
+var numPlayersReady = 0;    //number of players currently ready for the next round
+var numPlayers = 0;         //number of players connected
+    
+var gamePlaying = false;    //bool if the current round is playing
 
-var gamePlaying = false;
-
+//set up the box colour array
 var serverColourBoxes = new Array(7);
 for(var x = 0; x < 7; x++){
     serverColourBoxes[x] = new Array(7);
@@ -40,25 +41,30 @@ io.on('connection', function(socket) {
     
     getPlayerColour(socket);
     
+    //get the new connected player up to date with the current game conditions
     socket.emit('updateGameBoxes', serverColourBoxes);
     socket.emit('setGameState', gamePlaying);
     GetGameLeader();
     
+    //update number of players
     io.sockets.in('room1').emit('updateNumPlayers', {
             "serverPlayers": numPlayers,
             "serverPlayersReady": numPlayersReady
     });
     
+    //on incoming click from client
     socket.on('clientBoxClick', function(data) {
-        
+        //update the colour array
         serverColourBoxes[data.x][data.y] = data.colour;
          
+        //update all the players
         io.sockets.in('room1').emit('networkBoxClicked', {
             colour: data.colour,
                 x: data.x,
                 y: data.y
         });
         
+        //check the newest game leader
         GetGameLeader();
         
 	});

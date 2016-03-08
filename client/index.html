@@ -8,39 +8,28 @@
     
         "use strict";
 
-        var socket;
-        var timeLeft; 
-        var userName;
-        var userColour;
+        var socket;                 //io socket
+        var timeLeft;               //number of second left in the round
+        var userColour;             //the player's colour
         
         var canvas;
         var ctx;
         
-        var colourBoxArray;
-        var boxSize = (500/7);
+        var colourBoxArray;         //2D array of the canvas boxes, contains colour information
+        var boxSize = (500/7);      //the side length of the individual canvas boxes
         
-        var gamePlaying = false;
+        var gamePlaying = false;    //bool stating whether the round is currently running
         
-        var numPlayers;
-        var numPlayersReady;
+        var numPlayers;             //number of players connected to the server
+        var numPlayersReady;        //number of players ready for a new round
         
-        var leader;
+        var leader;                 //the colour of the current leader
         
-        var firstConnect = true;
+        var firstConnect = true;    //bool detecting first connection loop, used for ui
         
         function init() {
             
-            document.getElementById("testBtn").onclick = (function(){
-                console.log("test");
-            
-                var winBox = document.getElementById("winnerBox");
-                var winBoxCpy = winBox.cloneNode(true);
-                winBox.parentNode.replaceChild(winBoxCpy, winBox);
-                winBoxCpy.className = "";
-                winBoxCpy.className = "winnerBoxActive";
-            });
-            
-            userColour = "#0f0";
+            userColour = "white";
             
             canvas = document.getElementById("gameCanvas");
             ctx = canvas.getContext("2d");
@@ -54,14 +43,19 @@
                 }
             }
             
+            //handle user interaction with the canvas
             canvas.onclick = HandleBoxClick;
             
+            //set the update loop to about 60fps
             setInterval(Update, 17);
             
+            //set up socket callbacks
             SocketSetUp();
             
+            //set the div colour stating the player's colour
             document.getElementById("colourPreview").style.backgroundColor = userColour;
-        
+            
+            //set the ready up button to send a ready ping to the server
             document.getElementById("readyUpBtn").onclick = (function(){
                 socket.emit('readyUp'); 
                 document.getElementById("readyUpBtn").disabled = true;
@@ -70,24 +64,25 @@
         }
         
         
+        //set up all of the socket functinality for the client
         function SocketSetUp(){
             socket = io.connect();
             
-            socket.on('connect', function() {
-                
-            });
-            
+            //gets an updated version of the colour array from the server
             socket.on('updateGameBoxes', function(data){
                 colourBoxArray = data;
             });
             
+            //gets a click event made by another player from the server
             socket.on('networkBoxClicked', networkUpdate);
             
+            //gets the colour for the user as set by the server
             socket.on('setColour', function(data){
                 userColour = data; 
                 document.getElementById("colourPreview").style.backgroundColor = userColour;
             });
             
+            //gets the current running game state
             socket.on('setGameState', function(data){
                 gamePlaying = data; 
 
@@ -120,6 +115,7 @@
                 
             });
             
+            //gets the updated number of players on the server and readied up
             socket.on('updateNumPlayers', function(data){
                 numPlayers = data.serverPlayers;
                 numPlayersReady = data.serverPlayersReady;
@@ -130,11 +126,13 @@
                 document.getElementById("numPlayersReady").innerHTML = numPlayersReady;
             });
             
+            //gets the synced round time left
             socket.on('updateTime', function(data){
                 timeLeft = data;
                 document.getElementById("timeLeft").innerHTML = timeLeft;
             });
             
+            //updates the leader colour
             socket.on('updateLeader', function(data){
                 document.getElementById("colourLeader").innerHTML = data;
                 document.getElementById("winnerSpace").innerHTML = data;
@@ -143,15 +141,18 @@
         
         
         function Update(){
+            //draws the coloured boxes on the canvas
             DrawBoxes();
         }
         
         function networkUpdate(data){
+            //update one of the boxes in the array with the updated colour
             colourBoxArray[data.x][data.y] = data.colour;
         }
         
         function DrawBoxes(){
             
+            //loops through the 2d array and draws boxes with the correct colour
             for(var x = 0; x < 7; x++){
                 for(var y = 0; y < 7; y++){
                     
@@ -172,11 +173,14 @@
             if(gamePlaying){
                 var mousePos = GetMousePos(e);
             
+                //get the box coordinate clicked on
                 var xPos = Math.floor(mousePos.x/boxSize);
                 var yPos = Math.floor(mousePos.y/boxSize);
             
+                //set the box to the player's colour
                 colourBoxArray[xPos][yPos] = userColour;
             
+                //ping the server to update the server array
                 socket.emit("clientBoxClick", {
                     colour: userColour,
                     x: xPos,
@@ -268,8 +272,6 @@
     <div id="winnerContainer">
         <div id="winnerBox"><h3>The winner of the round is: <span id="winnerSpace"></span></h3></div>
     </div>
-    
-    <button id="testBtn">Test</button>
     
 </body>
 </html>
