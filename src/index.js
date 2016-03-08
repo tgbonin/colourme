@@ -41,7 +41,8 @@ io.on('connection', function(socket) {
     getPlayerColour(socket);
     
     socket.emit('updateGameBoxes', serverColourBoxes);
-    io.sockets.in('room1').emit('setGameState', gamePlaying);
+    socket.emit('setGameState', gamePlaying);
+    GetGameLeader();
     
     io.sockets.in('room1').emit('updateNumPlayers', {
             "serverPlayers": numPlayers,

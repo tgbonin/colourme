@@ -24,7 +24,21 @@
         var numPlayers;
         var numPlayersReady;
         
+        var leader;
+        
+        var firstConnect = true;
+        
         function init() {
+            
+            document.getElementById("testBtn").onclick = (function(){
+                console.log("test");
+            
+                var winBox = document.getElementById("winnerBox");
+                var winBoxCpy = winBox.cloneNode(true);
+                winBox.parentNode.replaceChild(winBoxCpy, winBox);
+                winBoxCpy.className = "";
+                winBoxCpy.className = "winnerBoxActive";
+            });
             
             userColour = "#0f0";
             
@@ -52,6 +66,7 @@
                 socket.emit('readyUp'); 
                 document.getElementById("readyUpBtn").disabled = true;
             });
+            
         }
         
         
@@ -78,14 +93,29 @@
 
                 var rdyDiv = document.getElementById("readyDiv");
                 var leaderDiv = document.getElementById("leaderDiv");
+                var winnerDiv = document.getElementById("winnerContainer");
+                
                 if(gamePlaying) {
                     rdyDiv.style.visibility = "hidden";
                     leaderDiv.style.visibility = "visible";
+                    winnerDiv.style.display = "none";
                 }
                 else {
                     rdyDiv.style.visibility = "visible";
                     leaderDiv.style.visibility = "hidden";
                     document.getElementById("readyUpBtn").disabled = false;
+                    
+                    winnerDiv.style.display = "block";
+                    
+                    if(!firstConnect){
+                        var winBox = document.getElementById("winnerBox");
+                        var winBoxCpy = winBox.cloneNode(true);
+                        winBox.parentNode.replaceChild(winBoxCpy, winBox);
+                        winBoxCpy.className = "";
+                        winBoxCpy.className = "winnerBoxActive";
+                    } else{
+                        firstConnect = false;
+                    }
                 }
                 
             });
@@ -107,6 +137,7 @@
             
             socket.on('updateLeader', function(data){
                 document.getElementById("colourLeader").innerHTML = data;
+                document.getElementById("winnerSpace").innerHTML = data;
             });
         }
         
@@ -183,6 +214,37 @@
         #gameCanvas{
             border: 3px solid #aaa;
         }
+        
+        #winnerBox{
+            border: 2px solid black;
+            width: 350px;
+            position: absolute;
+            background-color: white;
+            
+            left: 0;
+            right: 0;
+            top: -500px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0;
+        }
+        
+        .winnerBoxActive{
+            animation-name: fade-in-out;
+            animation-duration: 7s;
+        }
+        
+        #winnerContainer{
+            position: relative;
+        }
+        
+        @keyframes fade-in-out{
+            0% {opacity: 0;}
+            20% {opacity: 1;}
+            90% {opacity: 1;}
+            100% {opacity: 0;}
+        }
+        
     </style>
     
 </head>
@@ -202,6 +264,13 @@
             <h2>Current Leader: <span id="colourLeader"></span></h2>
         </div>
     </div> 
+    
+    <div id="winnerContainer">
+        <div id="winnerBox"><h3>The winner of the round is: <span id="winnerSpace"></span></h3></div>
+    </div>
+    
+    <button id="testBtn">Test</button>
+    
 </body>
 </html>
 
